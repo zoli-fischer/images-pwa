@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const fs = require('fs');
+const CopyPlugin = require('copy-webpack-plugin');
 const dotenv = require('dotenv').config({ path: path.resolve(__dirname, '.env') }).parsed;
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
@@ -90,7 +91,12 @@ const config = {
             template: path.resolve(__dirname, './src/index.html'),
             filename: './index.html',
         }),
-        new GenerateSW(),
+        new GenerateSW({
+            include: isDevelopment ? [] : [/\.html$/, /\.js$/, /\.css$/],
+        }),
+        new CopyPlugin([
+            { from: './static', to: '' },
+        ]),
     ],
     devServer: {
         historyApiFallback: true,
