@@ -1,6 +1,7 @@
 const webpack = require('webpack');
 const path = require('path');
 const fs = require('fs');
+const dotenv = require('dotenv').config({ path: path.resolve(__dirname, '.env') }).parsed;
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -8,6 +9,23 @@ const { GenerateSW } = require('workbox-webpack-plugin');
 
 const env = process.env.NODE_ENV || 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
+const https = (dotenv && dotenv.HTTPS === 'true') || false;
+const httpsCertPath = (dotenv && dotenv.HTTPS_CERT_PATH) || '';
+const httpsKeyPath = (dotenv && dotenv.HTTPS_KEY_PATH) || '';
+const httpsCaPath = (dotenv && dotenv.HTTPS_CERT_CA) || '';
+
+const getHttps = () => {
+    if (https) {
+        if (httpsCertPath || httpsKeyPath || httpsCaPath) {
+            return {
+                cert: fs.readFileSync(httpsCertPath),
+                key: fs.readFileSync(httpsKeyPath),
+            };
+        }
+        return true;
+    }
+    return false;
+};
 
 const config = {
     bail: true,
@@ -62,7 +80,6 @@ const config = {
         // This helps ensure the builds are consistent if source hasn't changed:
         new webpack.optimize.OccurrenceOrderPlugin(),
         new CleanWebpackPlugin(),
-        new GenerateSW(),
         new MiniCssExtractPlugin({
             // Options similar to the same options in webpackOptions.output
             // both options are optional
@@ -73,14 +90,11 @@ const config = {
             template: path.resolve(__dirname, './src/index.html'),
             filename: './index.html',
         }),
+        new GenerateSW(),
     ],
     devServer: {
         historyApiFallback: true,
-        https: {
-            key: fs.readFileSync('./.certificats/localhost+2-key.pem'),
-            cert: fs.readFileSync('./.certificats/localhost+2.pem'),
-            ca: fs.readFileSync('./.certificats/rootCA.pem'),
-        },
+        https: getHttps(),
         http2: true,
         contentBase: path.resolve('./static'),
         publicPath: '/',
