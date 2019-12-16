@@ -1,4 +1,6 @@
+/* eslint-disable react/prop-types, react/no-array-index-key */
 import React from 'react';
+import PropTypes from 'prop-types';
 import clsx from 'classnames';
 import {
     MuiThemeProvider, createMuiTheme, makeStyles, fade, useTheme,
@@ -7,6 +9,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Box from '@material-ui/core/Box';
+import Typography from '@material-ui/core/Typography';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Button from '@material-ui/core/Button';
 import Container from '@material-ui/core/Container';
@@ -36,9 +39,91 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import MailIcon from '@material-ui/icons/Mail';
+import SpeedDial from '@material-ui/lab/SpeedDial';
+import SpeedDialIcon from '@material-ui/lab/SpeedDialIcon';
+import SpeedDialAction from '@material-ui/lab/SpeedDialAction';
+import CameraAltOutlinedIcon from '@material-ui/icons/CameraAltOutlined';
+import VideocamOutlinedIcon from '@material-ui/icons/VideocamOutlined';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
+import Grid from '@material-ui/core/Grid';
+import Skeleton from '@material-ui/lab/Skeleton';
 
 // Material UI Theme Customization
 import Theme from './muiTheme';
+
+const data = [
+    {
+        src:
+            'https://i.ytimg.com/vi/pLqipJNItIo/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLBkklsyaw9FxDmMKapyBYCn9tbPNQ',
+        title: 'Don Diablo @ Tomorrowland Main Stage 2019 | Official…',
+        channel: 'Don Diablo',
+        views: '396 k views',
+        createdAt: 'a week ago',
+    },
+    {
+        src:
+            'https://i.ytimg.com/vi/_Uu12zY01ts/hqdefault.jpg?sqp=-oaymwEZCPYBEIoBSFXyq4qpAwsIARUAAIhCGAFwAQ==&rs=AOn4CLCpX6Jan2rxrCAZxJYDXppTP4MoQA',
+        title: 'Queen - Greatest Hits',
+        channel: 'Queen Official',
+        views: '40 M views',
+        createdAt: '3 years ago',
+    },
+    {
+        src:
+            'https://i.ytimg.com/vi/kkLk2XWMBf8/hqdefault.jpg?sqp=-oaymwEYCNIBEHZIVfKriqkDCwgBFQAAiEIYAXAB&rs=AOn4CLB4GZTFu1Ju2EPPPXnhMZtFVvYBaw',
+        title: 'Calvin Harris, Sam Smith - Promises (Official Video)',
+        channel: 'Calvin Harris',
+        views: '130 M views',
+        createdAt: '10 months ago',
+    },
+];
+
+const Media = (props) => {
+    const { loading } = props;
+
+    return (
+        <Grid container>
+            {(loading ? Array.from(new Array(3)) : data).map((item, index) => (
+                <Box key={index} width={210} marginRight={0.5} my={5}>
+                    {item ? (
+                        <img style={{ width: 210, height: 118 }} alt={item.title} src={item.src} />
+                    ) : (
+                        <Skeleton variant="rect" width={210} height={118} />
+                    )}
+                    {item ? (
+                        <Box pr={2}>
+                            <Typography gutterBottom variant="body2">
+                                {item.title}
+                            </Typography>
+                            <Typography display="block" variant="caption" color="textSecondary">
+                                {item.channel}
+                            </Typography>
+                            <Typography variant="caption" color="textSecondary">
+                                {`${item.views} • ${item.createdAt}`}
+                            </Typography>
+                        </Box>
+                    ) : (
+                        <Box pt={0.5}>
+                            <Skeleton />
+                            <Skeleton width="60%" />
+                        </Box>
+                    )}
+                </Box>
+            ))}
+        </Grid>
+    );
+};
+
+Media.propTypes = {
+    loading: PropTypes.bool,
+};
+
+Media.defaultProps = {
+    loading: false,
+};
+
+const iOS = process.browser && /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 const drawerWidth = 240;
 
@@ -166,6 +251,25 @@ const useStyles = makeStyles(theme => ({
         maxWidth: '50%',
         height: 'auto',
     },
+    mobileSpeedDial: {
+        position: 'fixed',
+        bottom: theme.spacing(10),
+        right: theme.spacing(2),
+        [theme.breakpoints.up('md')]: {
+            display: 'none',
+        },
+    },
+    speedDial: {
+        position: 'fixed',
+        bottom: theme.spacing(10),
+        right: theme.spacing(2),
+        [theme.breakpoints.up('md')]: {
+            right: theme.spacing(4),
+        },
+        [theme.breakpoints.down('sm')]: {
+            display: 'none',
+        },
+    },
 }));
 
 const App = () => {
@@ -173,6 +277,27 @@ const App = () => {
     const theme = useTheme();
     const [open, setOpen] = React.useState(false);
     const [mobileDrawer, setMobileDrawer] = React.useState(false);
+    const [openSpeed, setOpenSpeed] = React.useState(false);
+    const [filesBottom, setFilesBottom] = React.useState(false);
+
+    const refImage = React.useRef();
+    const refVideo = React.useRef();
+    const refFile = React.useRef();
+
+    const handleCloseSpeed = () => {
+        setOpenSpeed(false);
+    };
+
+    const handleOpenSpeed = () => {
+        setOpenSpeed(true);
+    };
+
+    const toggleFilesBottom = openDrawer => (event) => {
+        if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+            return;
+        }
+        setFilesBottom(openDrawer);
+    };
 
     const toggleMobileDrawer = openDrawer => (event) => {
         if (event && event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -335,6 +460,8 @@ const App = () => {
                 <Container>
                     <Toolbar className={classes.hidden} />
                     <Box my={2}>
+                        <Media loading />
+                        <Media />
                         {[...new Array(12)]
                             .map(() => `Cras mattis consectetur purus sit amet fermentum.
     Cras justo odio, dapibus ac facilisis in, egestas eget quam.
@@ -342,7 +469,6 @@ const App = () => {
     Praesent commodo cursus magna, vel scelerisque nisl consectetur et.`)
                             .join('\n')}
                     </Box>
-                    <BottomNavigation className={classes.hidden} />
                 </Container>
                 <AppBar
                     className={clsx(classes.appBar, classes.bottomBar, {
@@ -368,6 +494,8 @@ const App = () => {
                 open={mobileDrawer}
                 onClose={toggleMobileDrawer(false)}
                 onOpen={toggleMobileDrawer(true)}
+                disableBackdropTransition={!iOS}
+                disableDiscovery={iOS}
             >
                 <div
                     className={classes.list}
@@ -395,6 +523,59 @@ const App = () => {
                     </List>
                 </div>
             </SwipeableDrawer>
+            <SpeedDial
+                ariaLabel="SpeedDial"
+                className={classes.speedDial}
+                hidden={false}
+                icon={<SpeedDialIcon />}
+                onClose={handleCloseSpeed}
+                onOpen={handleOpenSpeed}
+                open={openSpeed}
+            >
+                {[
+                    { icon: <InsertDriveFileOutlinedIcon />, name: 'File', onClick: () => { refFile.current.click(); } },
+                    { icon: <CameraAltOutlinedIcon />, name: 'Image', onClick: () => { refImage.current.click(); } },
+                    { icon: <VideocamOutlinedIcon />, name: 'Video', onClick: () => { refVideo.current.click(); } },
+                ].map(action => (
+                    <SpeedDialAction
+                        key={action.name}
+                        icon={action.icon}
+                        tooltipTitle={action.name}
+                        tooltipOpen
+                        onClick={() => { handleCloseSpeed(); setTimeout(() => { action.onClick(); }, 100); }}
+                    />
+                ))}
+            </SpeedDial>
+            <div className={classes.hidden}>
+                <input type="file" accept="image/*" capture ref={refImage} onChange={() => { handleCloseSpeed(); }} />
+                <input type="file" accept="video/*" capture ref={refVideo} onChange={() => { handleCloseSpeed(); }} />
+                <input type="file" ref={refFile} onChange={() => { handleCloseSpeed(); }} />
+            </div>
+            <Fab color="primary" className={classes.mobileSpeedDial} onClick={toggleFilesBottom(true)}>
+                <AddIcon />
+            </Fab>
+            <Drawer anchor="bottom" open={filesBottom} onClose={toggleFilesBottom(false)}>
+                <Box p={2}>
+                    <Typography variant="h5">
+                        Upload
+                    </Typography>
+                </Box>
+                <Divider />
+                <List>
+                    <ListItem button onClick={() => { setFilesBottom(false); refVideo.current.click(); }}>
+                        <ListItemIcon><VideocamOutlinedIcon /></ListItemIcon>
+                        <ListItemText primary="Video" />
+                    </ListItem>
+                    <ListItem button onClick={() => { setFilesBottom(false); refImage.current.click(); }}>
+                        <ListItemIcon><CameraAltOutlinedIcon /></ListItemIcon>
+                        <ListItemText primary="Image" />
+                    </ListItem>
+                    <ListItem button onClick={() => { setFilesBottom(false); refFile.current.click(); }}>
+                        <ListItemIcon><InsertDriveFileOutlinedIcon /></ListItemIcon>
+                        <ListItemText primary="File" />
+                    </ListItem>
+                </List>
+            </Drawer>
         </MuiThemeProvider>
     );
 };

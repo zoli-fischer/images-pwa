@@ -101,7 +101,7 @@ const config = {
     devServer: {
         historyApiFallback: true,
         https: getHttps(),
-        http2: true,
+        http2: false,
         contentBase: path.resolve('./static'),
         publicPath: '/',
     },
