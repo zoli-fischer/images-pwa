@@ -92,14 +92,21 @@ const isGeo = !!navigator.geolocation;
 const MediaList = ({ width }) => {
     const classes = useStyles();
     const theme = useTheme();
-    const [loading, setLoading] = React.useState(true);
-    const [files, setFiles] = React.useState([]);
+    const [loading, setLoading] = React.useState(false);
+    const [files, setFiles] = React.useState(JSON.parse('[{"Key":"photo-1469854523086-cc02fe5d8800.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"deddc6decfb0e43bfc276cbbac828029","Size":332814,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1469881317953-097ae79770ea.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"1333de5e7723008e732222dfee60beb6","Size":226586,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1490730141103-6cac27aaab94.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"868662cce518f9c22f6e9268ac588e9c","Size":181829,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1501183007986-d0d080b147f9.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"b1039120fb787108cc463365a535249b","Size":97847,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1507608869274-d3177c8bb4c7.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"358bb838fa81f38c788a7374ab10ed7f","Size":78482,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1514315384763-ba401779410f.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"ce1d1cb1a1b4087284e0f3506775c136","Size":113888,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1532882191016-9133c6d82083.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"be4d15fa8096bad4c468c3ea0469afa3","Size":95242,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1533228876829-65c94e7b5025.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"0b18e4b62fb7f60f3275c24fb78c249f","Size":104264,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1558981852-426c6c22a060.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"5cbede8ee00a2f256c4b210e0d42a281","Size":214714,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1562694909-3d53309d5e14.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"1b88f49153cc9f249e5a38196c1e00c0","Size":231461,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}}]')
+        .map(file => ({
+            img: `https://image-pwa-upload.s3.eu-central-1.amazonaws.com/${file.Key}`,
+            id: file.ETag,
+            Key: file.Key,
+            title: file.Key,
+            size: file.Size,
+        })));
     const [openFile, setOpenFile] = React.useState({});
     const [open, setOpen] = React.useState(false);
     const [openMap, setOpenMap] = React.useState(false);
     const [mapCoord, setMapCoord] = React.useState(null);
     const mapFullScreen = useMediaQuery(theme.breakpoints.down('sm'));
-
+    console.log(files);
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -116,28 +123,28 @@ const MediaList = ({ width }) => {
         setOpenMap(false);
     };
 
-    const reload = () => {
-        setLoading(true);
-        listObjects()
-            .then((data) => {
-                setFiles(data.Contents.map(file => ({
-                    img: `https://image-pwa-upload.s3.eu-central-1.amazonaws.com/${file.Key}`,
-                    id: file.ETag,
-                    Key: file.Key,
-                    title: file.Key,
-                    size: file.Size,
-                })));
-            })
-            .catch((error) => {
-                alert(error.message);
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    };
+    // const reload = () => {
+    //     setLoading(true);
+    //     listObjects()
+    //         .then((data) => {
+    //             setFiles(data.Contents.map(file => ({
+    //                 img: `https://image-pwa-upload.s3.eu-central-1.amazonaws.com/${file.Key}`,
+    //                 id: file.ETag,
+    //                 Key: file.Key,
+    //                 title: file.Key,
+    //                 size: file.Size,
+    //             })));
+    //         })
+    //         .catch((error) => {
+    //             alert(error.message);
+    //         })
+    //         .finally(() => {
+    //             setLoading(false);
+    //         });
+    // };
 
     useEffect(() => {
-        reload();
+        // reload();
     }, []);
 
     useEffect(() => {
