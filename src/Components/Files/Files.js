@@ -1,7 +1,10 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import Toolbar from '@material-ui/core/Toolbar';
-// import Box from '@material-ui/core/Box';
+import PropTypes from 'prop-types';
+import {
+    PullToRefresh, PullDownContent, ReleaseContent, RefreshContent,
+} from 'react-js-pull-to-refresh';
 import Divider from '@material-ui/core/Divider';
 import Container from '@material-ui/core/Container';
 import MediaList from '../MediaList/MediaList';
@@ -43,7 +46,7 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const Files = () => {
+const Files = React.forwardRef(({ setDeleteInfo }, ref) => {
     const classes = useStyles();
 
     return (
@@ -55,11 +58,26 @@ const Files = () => {
                 </div>
                 <Divider orientation="vertical" variant="fullWidth" />
                 <div className={classes.filesView}>
-                    <MediaList />
+                    <PullToRefresh
+                        pullDownContent={<PullDownContent />}
+                        releaseContent={<ReleaseContent />}
+                        refreshContent={<RefreshContent />}
+                        onRefresh={() => ref.current.reload()}
+                        pullDownThreshold={200}
+                        triggerHeight={50}
+                        backgroundColor="white"
+                        startInvisible={true}
+                    >
+                        <MediaList innerRef={ref} setDeleteInfo={setDeleteInfo} />
+                    </PullToRefresh>
                 </div>
             </div>
         </Container>
     );
+});
+
+Files.propTypes = {
+    setDeleteInfo: PropTypes.func.isRequired,
 };
 
 export default Files;

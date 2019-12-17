@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { makeStyles } from '@material-ui/core/styles';
 import InsertDriveFileOutlinedIcon from '@material-ui/icons/InsertDriveFileOutlined';
 import Drawer from '@material-ui/core/Drawer';
@@ -8,15 +9,21 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SpeedDial from '@material-ui/lab/SpeedDial';
+import Slide from '@material-ui/core/Slide';
+import IconButton from '@material-ui/core/IconButton';
+import CloseIcon from '@material-ui/icons/Close';
 import SpeedDialIcon from '@material-ui/lab/SpeedDialIcon';
 import SpeedDialAction from '@material-ui/lab/SpeedDialAction';
+import Snackbar from '@material-ui/core/Snackbar';
 import CameraAltOutlinedIcon from '@material-ui/icons/CameraAltOutlined';
 import VideocamOutlinedIcon from '@material-ui/icons/VideocamOutlined';
 import Backdrop from '@material-ui/core/Backdrop';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
+import { uploadFile } from '../../utils/aws';
 
 const useStyles = makeStyles(theme => ({
     mobileSpeedDial: {
@@ -26,6 +33,7 @@ const useStyles = makeStyles(theme => ({
         [theme.breakpoints.up('md')]: {
             display: 'none',
         },
+        zIndex: 1000,
     },
     speedDial: {
         position: 'fixed',
@@ -50,7 +58,9 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const UploadSpeedDial = () => {
+const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
+
+const UploadSpeedDial = ({ onUploadSuccess }) => {
     const classes = useStyles();
     const refImage = React.useRef();
     const refVideo = React.useRef();
@@ -71,6 +81,29 @@ const UploadSpeedDial = () => {
             return;
         }
         setFilesBottom(openDrawer);
+    };
+
+    const [uploadInfo, setUploadInfo] = React.useState(false);
+    const [uploading, setUploading] = React.useState(false);
+    const uploadImage = () => {
+        const file = refImage.current.files[0];
+        if (file) {
+            refImage.current.value = '';
+            setUploading(true);
+            handleCloseSpeed();
+            uploadFile(file)
+                .then(() => {
+                    handleCloseSpeed();
+                    onUploadSuccess();
+                    setUploadInfo(true);
+                })
+                .catch((error) => {
+                    alert(error);
+                })
+                .finally(() => {
+                    setUploading(false);
+                });
+        }
     };
 
     return (
@@ -100,7 +133,7 @@ const UploadSpeedDial = () => {
                 ))}
             </SpeedDial>
             <div className={classes.hidden}>
-                <input type="file" accept="image/*" capture ref={refImage} onChange={() => { handleCloseSpeed(); }} />
+                <input type="file" accept="image/*" capture ref={refImage} onChange={() => { handleCloseSpeed(); uploadImage(); }} />
                 <input type="file" accept="video/*" capture ref={refVideo} onChange={() => { handleCloseSpeed(); }} />
                 <input type="file" ref={refFile} onChange={() => { handleCloseSpeed(); }} />
             </div>
@@ -129,8 +162,30 @@ const UploadSpeedDial = () => {
                     </ListItem>
                 </List>
             </Drawer>
+            <Snackbar
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                open={uploadInfo}
+                onClose={() => { setUploadInfo(false); }}
+                message={<span>File successfully uploaded</span>}
+                autoHideDuration={4000}
+                TransitionComponent={Transition}
+                action={[
+                    <IconButton color="inherit" onClick={() => { setUploadInfo(false); }}>
+                        <CloseIcon />
+                    </IconButton>,
+                ]}
+            />
+            <Backdrop
+                open={uploading}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
         </>
     );
+};
+
+UploadSpeedDial.propTypes = {
+    onUploadSuccess: PropTypes.func.isRequired,
 };
 
 export default UploadSpeedDial;

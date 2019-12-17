@@ -6,6 +6,7 @@ body, html {
     background-color: #ffffff;
     color: #000000;
     height: 100%;
+    overscroll-behavior-y: contain;
 }
 
 .app {
