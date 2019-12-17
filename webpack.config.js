@@ -15,6 +15,9 @@ const httpsCertPath = (dotenv && dotenv.HTTPS_CERT_PATH) || '';
 const httpsKeyPath = (dotenv && dotenv.HTTPS_KEY_PATH) || '';
 const httpsCaPath = (dotenv && dotenv.HTTPS_CERT_CA) || '';
 
+const awsAccessKey = (dotenv && dotenv.AWS_ACCESS_KEY) || false;
+const awsSecretKey = (dotenv && dotenv.AWS_SECRET_KEY) || false;
+
 const getHttps = () => {
     if (https) {
         if (httpsCertPath || httpsKeyPath || httpsCaPath) {
@@ -97,6 +100,10 @@ const config = {
         new CopyPlugin([
             { from: './static', to: '' },
         ]),
+        new webpack.DefinePlugin({
+            awsAccessKey: JSON.stringify(awsAccessKey),
+            awsSecretKey: JSON.stringify(awsSecretKey),
+        }),
     ],
     devServer: {
         historyApiFallback: true,
