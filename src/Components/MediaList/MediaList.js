@@ -105,6 +105,9 @@ const useStyles = makeStyles(theme => ({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    deleteDialog: {
+        zIndex: '1500 !important',
+    },
 }));
 
 const getGridListCols = (width) => {
@@ -455,6 +458,7 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
             ))}
             <Dialog
                 open={showDelete}
+                className={classes.deleteDialog}
                 TransitionComponent={Transition}
                 keepMounted
                 onClose={() => { setShowDelete(false); }}
