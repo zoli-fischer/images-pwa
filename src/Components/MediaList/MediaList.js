@@ -4,10 +4,17 @@ import { makeStyles, useTheme } from '@material-ui/core/styles';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
+import Drawer from '@material-ui/core/Drawer';
 import IconButton from '@material-ui/core/IconButton';
 import Skeleton from '@material-ui/lab/Skeleton';
-import InfoIcon from '@material-ui/icons/Info';
-import withWidth, { isWidthUp } from '@material-ui/core/withWidth';
+import MoreVertIcon from '@material-ui/icons/MoreVert';
+import Menu from '@material-ui/core/Menu';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import MenuItem from '@material-ui/core/MenuItem';
+import withWidth, { isWidthUp, isWidthDown } from '@material-ui/core/withWidth';
 import CloudDownloadOutlinedIcon from '@material-ui/icons/CloudDownloadOutlined';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -24,9 +31,12 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import CloseIcon from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
+import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
+import VideocamIcon from '@material-ui/icons/Videocam';
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { listObjects, downloadImage, deleteFile } from '../../utils/aws';
+
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -49,6 +59,9 @@ const useStyles = makeStyles(theme => ({
     textSkeleton: {
         maxWidth: 220,
     },
+    tile: {
+        cursor: 'pointer',
+    },
     zoom: {
         backgroundColor: '#000000',
         backgroundRepeat: 'no-repeat',
@@ -66,6 +79,31 @@ const useStyles = makeStyles(theme => ({
     backdrop: {
         zIndex: theme.zIndex.drawer + 1,
         color: '#fff',
+    },
+    iconHolder: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: '100%',
+        height: '70%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    video: {
+        width: '100%',
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        height: '100%',
+    },
+    mapHolder: {
+        maxWidth: '100%',
+        width: 400,
+        height: 260,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 }));
 
@@ -89,22 +127,15 @@ const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={r
 
 const isGeo = !!navigator.geolocation;
 
+const ifImage = filename => filename && filename.match(/.(jpg|jpeg|png|gif)$/i);
+const ifVideo = filename => filename && filename.match(/.(mp4|mov|mpeg)$/i);
+
 const MediaList = ({ setDeleteInfo, width, innerRef }) => {
     const classes = useStyles();
     const theme = useTheme();
     const [loading, setLoading] = React.useState(false);
     const [fileLoading, setFileLoading] = React.useState(false);
     const [files, setFiles] = React.useState([]);
-    /*
-    const [files, setFiles] = React.useState(JSON.parse('[{"Key":"photo-1469854523086-cc02fe5d8800.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"deddc6decfb0e43bfc276cbbac828029","Size":332814,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1469881317953-097ae79770ea.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"1333de5e7723008e732222dfee60beb6","Size":226586,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1490730141103-6cac27aaab94.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"868662cce518f9c22f6e9268ac588e9c","Size":181829,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1501183007986-d0d080b147f9.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"b1039120fb787108cc463365a535249b","Size":97847,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1507608869274-d3177c8bb4c7.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"358bb838fa81f38c788a7374ab10ed7f","Size":78482,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1514315384763-ba401779410f.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"ce1d1cb1a1b4087284e0f3506775c136","Size":113888,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1532882191016-9133c6d82083.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"be4d15fa8096bad4c468c3ea0469afa3","Size":95242,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1533228876829-65c94e7b5025.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"0b18e4b62fb7f60f3275c24fb78c249f","Size":104264,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1558981852-426c6c22a060.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"5cbede8ee00a2f256c4b210e0d42a281","Size":214714,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}},{"Key":"photo-1562694909-3d53309d5e14.jpg","LastModified":"2019-12-17T14:39:15.000Z","ETag":"1b88f49153cc9f249e5a38196c1e00c0","Size":231461,"StorageClass":"ONEZONE_IA","Owner":{"ID":"d5dbbd814af982ebbc1aeabc9a38b8f224c4e1cf46e118ee148aedfe823999d8"}}]')
-        .map(file => ({
-            img: `https://image-pwa-upload.s3.eu-central-1.amazonaws.com/${file.Key}`,
-            id: file.ETag,
-            Key: file.Key,
-            title: file.Key,
-            size: file.Size,
-        })));
-    */
     const [openFile, setOpenFile] = React.useState({});
     const [open, setOpen] = React.useState(false);
     const [openMap, setOpenMap] = React.useState(false);
@@ -138,6 +169,7 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                     LastModified: file.LastModified,
                     title: file.Key,
                     size: file.Size,
+                    anchorEl: null,
                 })));
             })
             .catch((error) => {
@@ -148,7 +180,12 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
             });
     };
 
+    const [showDelete, setShowDelete] = React.useState(false);
     const deleteByKey = (Key) => {
+        setShowDelete(Key);
+    };
+
+    const realDeleteByKey = (Key) => {
         setFileLoading(true);
         deleteFile(Key)
             .then(() => {
@@ -168,8 +205,10 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
         reload();
     }, []);
 
+    const [mapLoaded, setMapLoaded] = React.useState(false);
     useEffect(() => {
         if (openMap) {
+            setMapLoaded(false);
             try {
                 navigator.geolocation.getCurrentPosition((position) => {
                     setMapCoord({
@@ -189,6 +228,42 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
         reload,
     }));
 
+    const openFileType = (event, file) => {
+        if (ifImage(file.Key) || ifVideo(file.Key)) {
+            let isIcon = /(MuiIconButton-root)/.test(event.target.className);
+            if (!isIcon) {
+                let target = event.target.parentNode;
+                while (target && !isIcon) {
+                    isIcon = target && target.className && /(MuiIconButton-root)/.test(target.className);
+                    target = target.parentNode;
+                }
+            }
+            if (!isIcon) {
+                setOpenFile(file);
+                handleClickOpen();
+            }
+        }
+    };
+
+    const handleMenuClick = (event, cfile) => {
+        setFiles(files.map((file) => {
+            if (file === cfile) {
+                // eslint-disable-next-line no-param-reassign
+                file.anchorEl = event.currentTarget;
+            }
+            return file;
+        }));
+    };
+    const handleMenuClose = (cfile) => {
+        setFiles(files.map((file) => {
+            if (file === cfile) {
+                // eslint-disable-next-line no-param-reassign
+                file.anchorEl = null;
+            }
+            return file;
+        }));
+    };
+
     return (
         <>
             <div className={classes.root} ref={innerRef}>
@@ -197,22 +272,28 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                 </p>
                 <GridList cellHeight={180} className={classes.gridList} cols={getGridListCols(width)} spacing={2}>
                     {files.map(file => (
-                        <GridListTile key={file.id}>
-                            <img src={file.img} alt={file.title} />
+                        <GridListTile
+                            className={!ifImage(file.Key) && !ifVideo(file.Key) ? '' : classes.tile}
+                            key={file.id}
+                            onClick={(event) => { openFileType(event, file); }}
+                        >
+                            {ifImage(file.Key) && <img src={file.img} alt={file.title} />}
+                            {ifVideo(file.Key) && <div className={classes.iconHolder}><VideocamIcon style={{ fontSize: 50 }} /></div>}
+                            {!ifImage(file.Key) && !ifVideo(file.Key) && <div className={classes.iconHolder}><InsertDriveFileIcon style={{ fontSize: 50 }} /></div>}
                             <GridListTileBar
                                 title={file.title}
                                 subtitle={<span>{(file.size / 1024).toFixed(0)} kb</span>}
                                 actionIcon={(
-                                    <IconButton
-                                        aria-label={`info about ${file.title}`}
-                                        className={classes.icon}
-                                        onClick={() => {
-                                            setOpenFile(file);
-                                            handleClickOpen();
-                                        }}
-                                    >
-                                        <InfoIcon />
-                                    </IconButton>
+                                    <>
+                                        <IconButton
+                                            aria-label={`info about ${file.title}`}
+                                            id="tileButton"
+                                            className={classes.icon}
+                                            onClick={(event) => { handleMenuClick(event, file); }}
+                                        >
+                                            <MoreVertIcon />
+                                        </IconButton>
+                                    </>
                                 )}
                             />
                         </GridListTile>
@@ -224,15 +305,17 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                             <Typography variant="h6" noWrap className={classes.title}>
                                 {openFile.title}
                             </Typography>
-                            <Tooltip title="Delete" arrow>
-                                <IconButton
-                                    color="inherit"
-                                    onClick={() => { deleteByKey(openFile.Key); }}
-                                >
-                                    <DeleteOutlineOutlinedIcon />
-                                </IconButton>
-                            </Tooltip>
-                            {isGeo && (
+                            {isWidthUp('md', width) && (
+                                <Tooltip title="Delete" arrow>
+                                    <IconButton
+                                        color="inherit"
+                                        onClick={() => { deleteByKey(openFile.Key); }}
+                                    >
+                                        <DeleteOutlineOutlinedIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                            {isWidthUp('md', width) && isGeo && (
                                 <Tooltip title="Map" arrow>
                                     <IconButton
                                         color="inherit"
@@ -244,16 +327,29 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                                     </IconButton>
                                 </Tooltip>
                             )}
-                            <Tooltip title="Download" arrow>
-                                <IconButton
-                                    color="inherit"
-                                    onClick={() => {
-                                        downloadImage(openFile.Key, openFile.img);
-                                    }}
-                                >
-                                    <CloudDownloadOutlinedIcon />
-                                </IconButton>
-                            </Tooltip>
+                            {isWidthUp('md', width) && (
+                                <Tooltip title="Download" arrow>
+                                    <IconButton
+                                        color="inherit"
+                                        onClick={() => {
+                                            downloadImage(openFile.Key, openFile.img);
+                                        }}
+                                    >
+                                        <CloudDownloadOutlinedIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                            {isWidthDown('sm', width) && (
+                                <Tooltip title="Close" arrow>
+                                    <IconButton
+                                        edge="end"
+                                        color="inherit"
+                                        onClick={(event) => { handleMenuClick(event, openFile); }}
+                                    >
+                                        <MoreVertIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
                             <Tooltip title="Close" arrow>
                                 <IconButton
                                     edge="end"
@@ -265,20 +361,29 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                             </Tooltip>
                         </Toolbar>
                     </AppBar>
-                    <div className={classes.zoom} style={{ backgroundImage: `url(${openFile.img})` }} onClick={handleClose} />
+                    {ifImage(openFile.Key) && <div className={classes.zoom} style={{ backgroundImage: `url(${openFile.img})` }} onClick={handleClose} />}
+                    {ifVideo(openFile.Key) && (
+                        <div className={classes.zoom}>
+                            <video src={openFile.img} controls className={classes.video} />
+                        </div>
+                    )}
                 </Dialog>
                 <Dialog fullScreen={mapFullScreen} open={openMap} onClose={handleMapClose} TransitionComponent={Transition}>
                     <DialogTitle>Location service</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
                             {mapCoord && (
-                                <iframe
-                                    title="map"
-                                    src={`https://maps.google.com/maps?q=${mapCoord.lat}, ${mapCoord.lng}&z=15&output=embed`}
-                                    width="100%"
-                                    height="270"
-                                    style={{ border: 0 }}
-                                />
+                                <div className={classes.mapHolder}>
+                                    {!mapLoaded && <CircularProgress color="secondary" />}
+                                    <iframe
+                                        onLoad={() => { setMapLoaded(true); }}
+                                        title="map"
+                                        src={`https://maps.google.com/maps?q=${mapCoord.lat}, ${mapCoord.lng}&z=15&output=embed`}
+                                        width="100%"
+                                        height="100%"
+                                        style={{ border: 0, display: mapLoaded ? 'block' : 'none' }}
+                                    />
+                                </div>
                             )}
                         </DialogContentText>
                     </DialogContent>
@@ -295,6 +400,82 @@ const MediaList = ({ setDeleteInfo, width, innerRef }) => {
                     <CircularProgress color="inherit" />
                 </Backdrop>
             </div>
+            {files.map(file => (
+                <React.Fragment key={file.id}>
+                    {isWidthUp('md', width) && (
+                        <Menu
+                            anchorEl={file.anchorEl}
+                            keepMounted
+                            open={Boolean(file.anchorEl)}
+                            onClose={() => { handleMenuClose(file); }}
+                        >
+                            <MenuItem onClick={() => { handleMenuClose(file); downloadImage(file.Key, file.img); }}>
+                                <IconButton color="inherit" size="small">
+                                    <CloudDownloadOutlinedIcon />
+                                </IconButton>
+                                &nbsp;Download
+                            </MenuItem>
+                            {isGeo && (
+                                <MenuItem onClick={() => { handleMenuClose(file); handleMapClickOpen(); }}>
+                                    <IconButton color="inherit" size="small">
+                                        <RoomOutlinedIcon />
+                                    </IconButton>
+                                    &nbsp;Map
+                                </MenuItem>
+                            )}
+                            <MenuItem onClick={() => { handleMenuClose(file); deleteByKey(file.Key); }}>
+                                <IconButton color="inherit" size="small">
+                                    <DeleteOutlineOutlinedIcon />
+                                </IconButton>
+                                &nbsp;Delete
+                            </MenuItem>
+                        </Menu>
+                    )}
+                    {isWidthDown('sm', width) && (
+                        <Drawer anchor="bottom" open={!!file.anchorEl} onClose={() => { handleMenuClose(file); }}>
+                            <List>
+                                <ListItem button onClick={() => { handleMenuClose(file); deleteByKey(file.Key); }}>
+                                    <ListItemIcon><DeleteOutlineOutlinedIcon /></ListItemIcon>
+                                    <ListItemText primary="Delete" />
+                                </ListItem>
+                                {isGeo && (
+                                    <ListItem button onClick={() => { handleMenuClose(file); handleMapClickOpen(); }}>
+                                        <ListItemIcon><RoomOutlinedIcon /></ListItemIcon>
+                                        <ListItemText primary="Map" />
+                                    </ListItem>
+                                )}
+                                <ListItem button onClick={() => { handleMenuClose(file); downloadImage(file.Key, file.img); }}>
+                                    <ListItemIcon><CloudDownloadOutlinedIcon /></ListItemIcon>
+                                    <ListItemText primary="Download" />
+                                </ListItem>
+                            </List>
+                        </Drawer>
+                    )}
+                </React.Fragment>
+            ))}
+            <Dialog
+                open={showDelete}
+                TransitionComponent={Transition}
+                keepMounted
+                onClose={() => { setShowDelete(false); }}
+                aria-labelledby="alert-dialog-slide-title"
+                aria-describedby="alert-dialog-slide-description"
+            >
+                <DialogTitle>Delete file?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to detele this file?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => { setShowDelete(false); }} color="primary">
+                        No
+                    </Button>
+                    <Button onClick={() => { setShowDelete(false); realDeleteByKey(showDelete); }} color="primary">
+                        Yes
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

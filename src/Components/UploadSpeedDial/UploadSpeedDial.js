@@ -56,6 +56,10 @@ const useStyles = makeStyles(theme => ({
     speedIcon: {
         color: '#ffffff',
     },
+    uploadBackdrop: {
+        zIndex: 1500,
+        color: '#fff',
+    },
 }));
 
 const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
@@ -85,13 +89,15 @@ const UploadSpeedDial = ({ onUploadSuccess }) => {
 
     const [uploadInfo, setUploadInfo] = React.useState(false);
     const [uploading, setUploading] = React.useState(false);
-    const uploadImage = () => {
-        const file = refImage.current.files[0];
+    const [uploadProgress, setUploadProgress] = React.useState(false);
+    const uploadRef = (refThis) => {
+        const file = refThis.current.files[0];
         if (file) {
-            refImage.current.value = '';
+            // eslint-disable-next-line no-param-reassign
+            refThis.current.value = '';
             setUploading(true);
             handleCloseSpeed();
-            uploadFile(file)
+            uploadFile(file, (progress) => { setUploadProgress((progress.loaded / progress.total * 100).toFixed(2)); })
                 .then(() => {
                     handleCloseSpeed();
                     onUploadSuccess();
@@ -133,9 +139,9 @@ const UploadSpeedDial = ({ onUploadSuccess }) => {
                 ))}
             </SpeedDial>
             <div className={classes.hidden}>
-                <input type="file" accept="image/*" capture ref={refImage} onChange={() => { handleCloseSpeed(); uploadImage(); }} />
-                <input type="file" accept="video/*" capture ref={refVideo} onChange={() => { handleCloseSpeed(); }} />
-                <input type="file" ref={refFile} onChange={() => { handleCloseSpeed(); }} />
+                <input type="file" accept="image/*" capture ref={refImage} onChange={() => { handleCloseSpeed(); uploadRef(refImage); }} />
+                <input type="file" accept="video/*" capture ref={refVideo} onChange={() => { handleCloseSpeed(); uploadRef(refVideo); }} />
+                <input type="file" ref={refFile} onChange={() => { handleCloseSpeed(); uploadRef(refFile); }} />
             </div>
             <Fab color="primary" className={classes.mobileSpeedDial} onClick={toggleFilesBottom(true)}>
                 <AddIcon className={classes.speedIcon} />
@@ -177,8 +183,20 @@ const UploadSpeedDial = ({ onUploadSuccess }) => {
             />
             <Backdrop
                 open={uploading}
+                className={classes.uploadBackdrop}
             >
-                <CircularProgress color="inherit" />
+                <div style={{ display: 'table', textAlign: 'center' }}>
+                    <div style={{ display: 'table-row' }}>
+                        <CircularProgress
+                            color="inherit"
+                            variant="static"
+                            value={uploadProgress}
+                        />
+                    </div>
+                    <div style={{ display: 'table-row' }}>
+                        <Typography variant="h5">{parseInt(uploadProgress, 10).toFixed(0)}%</Typography>
+                    </div>
+                </div>
             </Backdrop>
         </>
     );

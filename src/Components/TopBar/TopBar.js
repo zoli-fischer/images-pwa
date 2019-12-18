@@ -1,12 +1,25 @@
+import 'date-fns';
 import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
+import { MuiPickersUtilsProvider, KeyboardDatePicker } from '@material-ui/pickers';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
+import Box from '@material-ui/core/Box';
 import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import Slide from '@material-ui/core/Slide';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import withWidth, { isWidthDown } from '@material-ui/core/withWidth';
 import Badge from '@material-ui/core/Badge';
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
+import TextField from '@material-ui/core/TextField';
+import DateFnsUtils from '@date-io/date-fns';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 import NotificationsIcon from '@material-ui/icons/Notifications';
@@ -124,7 +137,9 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-const TopBar = ({ onOpen }) => {
+const Transition = React.forwardRef((props, ref) => <Slide direction="up" ref={ref} {...props} />);
+
+const TopBar = ({ onOpen, width }) => {
     const classes = useStyles();
     const theme = useTheme();
 
@@ -153,6 +168,12 @@ const TopBar = ({ onOpen }) => {
         setAnchorEl(null);
     };
 
+    const [showProfileDialog, setShowProfileDialog] = React.useState(false);
+    const [selectedDate, handleDateChange] = React.useState('10/03/1990');
+    const [selectedName, handleNameChange] = React.useState('Peter');
+    const [selectedEmail, handleEmailChange] = React.useState('peter@colourbox.com');
+    const [selectedNewsletter, handleNewsletterChange] = React.useState(true);
+
     React.useEffect(() => {
         onOpen(openDesktopDrawer);
     }, [openDesktopDrawer]);
@@ -166,17 +187,22 @@ const TopBar = ({ onOpen }) => {
             open={isMenuOpen}
             onClose={handleMenuClose}
         >
-            <MenuItem onClick={handleMenuClose}>
-                <IconButton color="inherit">
+            <MenuItem
+                onClick={() => {
+                    handleMenuClose();
+                    setShowProfileDialog(true);
+                }}
+            >
+                <IconButton size="small" color="inherit">
                     <AccountCircle />
                 </IconButton>
-                <p>My account</p>
+                &nbsp;My account
             </MenuItem>
             <MenuItem onClick={handleMenuClose}>
-                <IconButton color="inherit">
+                <IconButton size="small" color="inherit">
                     <PowerSettingsNewIcon />
                 </IconButton>
-                <p>Logout</p>
+                &nbsp;Logout
             </MenuItem>
         </Menu>
     );
@@ -261,7 +287,7 @@ const TopBar = ({ onOpen }) => {
                             onClick={handleProfileMenuOpen}
                             startIcon={<AccountCircle />}
                         >
-                            Hello, Zoltan
+                            Hello, Peter
                         </Button>
                     </div>
                     <div className={classes.sectionMobile}>
@@ -311,16 +337,63 @@ const TopBar = ({ onOpen }) => {
                     {renderDrawerContent}
                 </div>
             </SwipeableDrawer>
+            <Dialog open={showProfileDialog} onClose={() => { setShowProfileDialog(false); }} TransitionComponent={Transition} fullScreen={isWidthDown('sm', width)}>
+                <DialogTitle>My account</DialogTitle>
+                <DialogContent>
+                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                        <TextField
+                            margin="dense"
+                            id="name"
+                            label="Name"
+                            type="email"
+                            value={selectedName}
+                            onChange={(e, value) => { handleNameChange(value); }}
+                            fullWidth
+                        />
+                        <TextField
+                            margin="dense"
+                            id="email"
+                            label="Email address"
+                            type="email"
+                            value={selectedEmail}
+                            onChange={(e, value) => { handleEmailChange(value); }}
+                            fullWidth
+                        />
+                        <KeyboardDatePicker
+                            disableToolbar
+                            variant="inline"
+                            format="MM/dd/yyyy"
+                            margin="normal"
+                            label="Birthdate"
+                            value={selectedDate}
+                            onChange={handleDateChange}
+                            fullWidth
+                        />
+                        <Box mt={1}>
+                            <FormControlLabel control={<Switch color="primary" value="checkedC" checked={selectedNewsletter} onChange={(e, value) => { handleNewsletterChange(value); }} />} label="Subscribe to newsletter" />
+                        </Box>
+                    </MuiPickersUtilsProvider>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => { setShowProfileDialog(false); }} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={() => { setShowProfileDialog(false); }} color="primary">
+                        Update
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };
 
 TopBar.propTypes = {
     onOpen: PropTypes.func,
+    width: PropTypes.string.isRequired,
 };
 
 TopBar.defaultProps = {
     onOpen: () => {},
 };
 
-export default TopBar;
+export default withWidth()(TopBar);
