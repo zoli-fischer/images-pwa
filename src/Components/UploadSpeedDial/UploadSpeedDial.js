@@ -194,7 +194,7 @@ const UploadSpeedDial = ({ onUploadSuccess }) => {
                         />
                     </div>
                     <div style={{ display: 'table-row' }}>
-                        <Typography variant="h5">{parseInt(uploadProgress, 10).toFixed(0)}%</Typography>
+                        <Typography variant="h5">{parseInt(uploadProgress, 10) > 0 ? `${parseInt(uploadProgress, 10).toFixed(0)}%` : ''}</Typography>
                     </div>
                 </div>
             </Backdrop>

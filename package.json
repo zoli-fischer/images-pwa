@@ -1,6 +1,6 @@
 {
   "name": "images-pwa",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Progressive Web Apps - Manage images",
   "main": "index.js",
   "scripts": {
